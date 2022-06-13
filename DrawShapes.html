@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body>
+
+ <label for="shape">Choose a shape:</label>
+<select name="shape" id="shape">
+  <option value="flower">flower</option>
+  <option value="heart">heart</option>
+  <option value="circle">circle</option>
+  <option value="diamond">diamond</option>
+</select> 
+
+<label for="color">Choose a color:</label>
+<select name="color" id="color">
+  <option value="pink">pink</option>
+  <option value="lavender">lavender</option>
+  <option value="green">green</option>
+  <option value="tangerine">tangerine</option>
+</select> 
+
+<label for="size">size:</label>
+<input type="text" id="size" name="size"> 
+
+<canvas id="myCanvas" width="256" height="256"></canvas>
+<script>
+var canvas = document.getElementById('myCanvas');
+var context = canvas.getContext('2d');
+var backColor = "#ffccdd";
+var periwinkle = "#ccccff";
+var tangerine = "#ffbb99";
+var pink = "#ff80a0";
+var green = "#008000";
+var lavender = "#e6e6fa";
+
+var xRes = 256;
+var yRes = 256;
+
+function writeR(x, y, w, h, col) {
+  context.beginPath();
+  context.rect(x, y, w, h);
+  context.fillStyle = col;
+  context.fill();
+}
+
+function drawCross(x, y, r, col) {
+  for (var i = 0; i < r; i++) {
+    writeR(x + i, y + i, 1, 1, col);
+    writeR(x + r - 1 -i, y + i, 1, 1, col);
+  }
+}
+
+function drawTriangle(x, y, w, col) {
+  var c = x;
+  var v = y;
+  while (c > x-w) {
+    var a = y+w;
+    while (a > v){
+      writeR(c, a, 1, 1, col);
+      a--;
+    }
+    c--;
+    v++;
+  }
+}
+
+function drawCircle(centerX, centerY, radius, col) {
+  var x = Math.floor(centerX - radius);
+  while (x < centerX + radius) {
+    var y = Math.floor(centerY - radius); 
+    while (y < centerY + radius) {
+      //
+      var xdist = x - centerX;
+      var ydist = y - centerY;
+      if (xdist*xdist + ydist*ydist < radius*radius) {
+        writeR(x, y, 1, 1, col);
+      }
+      //
+      y++;
+    }
+    x++;
+  }
+}
+
+function drawPartdiamond(x, y, r, col) { 
+  var a = Math.floor(x);
+  var b = Math.floor(y);
+  var i = 0;
+  while (i < r) {
+    var j = 1 
+    while (j < r) {
+      writeR(a+1+i+j, b-1+i-j, 1, 1, col);
+      j++;
+    }
+    i++;
+  } 
+}
+function drawFulldiamond(x, y, r, col) {
+  drawPartdiamond(x, y, r, col);
+  drawPartdiamond(x+1, y, r-1, col);
+}
+
+function drawHeart(x, y, r, col) {
+  drawFulldiamond(x-r, y, r, col);
+  var realR = r - 1;
+  drawCircle(x-realR/2 + 1, y-realR/2, realR/Math.sqrt(2), col);
+  drawCircle(x+realR/2 + 1, y-realR/2, realR/Math.sqrt(2), col);
+}
+
+function drawFlower (x, y, r, n, centerCol, petalCol) {
+  drawCircle(x, y, r, centerCol);
+  
+  var angle = 0;
+  for(var i = 0; i < n; i++){
+    drawCircle(x+2*r*Math.cos(angle), y+2*r*Math.sin(angle), r, petalCol);
+    
+    angle = angle + 2*Math.PI/n;
+  }
+}
+
+function draw() {
+  writeR(0, 0, xRes, yRes, backColor);
+
+  drawCross(6, 6, 20, tangerine);
+  drawCross(16, 11, 10, tangerine);
+
+  drawTriangle(255, 0, 255, tangerine);
+  drawTriangle(30, 5, 25, tangerine);
+  drawTriangle(28, 7, 20, periwinkle);
+
+  drawCircle(128, 128, 120, periwinkle);
+  drawCircle(128, 128, 110, backColor);
+  drawCircle(128, 128, 100, tangerine);
+  
+  drawFulldiamond(200, 18, 10, periwinkle);
+  
+  drawHeart(128, 128, 30, periwinkle);
+  drawHeart(128, 128, 20, tangerine);
+  drawHeart(128, 128, 4, backColor);
+  
+  drawFlower(180, 80, 8, 5, periwinkle, pink);
+}
+draw();
+
+function getColor() {
+  var operationElement = document.getElementById("color");
+  var color = operationElement.options[operationElement.selectedIndex].text;
+  
+  if(color == "pink") {
+    return pink;
+  }
+  if(color == "lavender") {
+    return lavender;
+  }
+  if(color == "green") {
+    return green;
+  }
+  if(color == "tangerine") {
+    return tangerine;
+  }
+}
+
+function getRadius() {
+  var size = document.getElementById("size").value;
+  return parseFloat(size);
+}
+
+function drawShape(canvas, event) {
+  let rect = canvas.getBoundingClientRect();
+  let x = event.clientX - rect.left;
+  let y = event.clientY - rect.top;
+  
+  var operationElement = document.getElementById("shape");
+  var shape = operationElement.options[operationElement.selectedIndex].text;
+  if(shape == "heart") {
+    drawHeart(x, y, getRadius(), getColor());
+  }
+  if (shape == "circle") {
+    drawCircle(x, y, getRadius(), getColor());
+  }
+  if (shape == "flower") {
+    drawFlower(x, y, getRadius(), 8, getColor(), getColor());
+  }
+  if (shape == "diamond") {
+  drawFulldiamond(x, y, getRadius(), getColor());
+  }
+}
+
+
+
+var isPressed = false;
+
+canvas.addEventListener("mousedown", function(e)
+{
+    drawShape(canvas, e);
+    isPressed = true;
+});
+canvas.addEventListener("mousemove", function(e)
+{
+  if (isPressed) {
+    drawShape(canvas, e);
+  }
+});
+canvas.addEventListener("mouseup", function(e)
+{
+    isPressed = false;
+});
+</script>
+
+
+
+</body></html>
